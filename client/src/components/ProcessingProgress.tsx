@@ -26,12 +26,13 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
     <Card className="border-2 border-primary/20">
       <CardHeader className="p-4">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
-          {status === 'processing' && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+          {(status === 'downloading' || status === 'processing') && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
           {status === 'completed' && <CheckCircle2 className="h-4 w-4 text-status-online" />}
           {status === 'error' && <XCircle className="h-4 w-4 text-destructive" />}
           {status === 'pending' && <Clock className="h-4 w-4 text-status-away" />}
           
           {status === 'pending' && 'Preparing...'}
+          {status === 'downloading' && 'Downloading Photos'}
           {status === 'processing' && 'Creating Timelapse'}
           {status === 'completed' && 'Timelapse Ready'}
           {status === 'error' && 'Error'}
@@ -50,7 +51,7 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
-        {(status === 'pending' || status === 'processing') && (
+        {(status === 'pending' || status === 'downloading' || status === 'processing') && (
           <>
             <Progress value={progress} className="h-2" data-testid="progress-bar" />
             <div className="flex items-center justify-between text-sm">

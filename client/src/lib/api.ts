@@ -90,12 +90,13 @@ export function getThumbnailUrl(assetId: string): string {
 export async function createTimelapse(
   assetIds: string[],
   options: TimelapseSettings
-): Promise<void> {
+): Promise<string> {
   const sid = await getSessionId();
-  await request('/timelapse/create', {
+  const result = await request<{ jobId: string }>('/timelapse/create', {
     method: 'POST',
     body: JSON.stringify({ sessionId: sid, assetIds, options }),
   });
+  return result.jobId;
 }
 
 export async function getTimelapseJob(jobId: string): Promise<TimelapseJob> {

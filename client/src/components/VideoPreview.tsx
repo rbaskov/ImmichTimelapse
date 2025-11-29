@@ -43,7 +43,7 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
 
   const previewUrl = videoUrl || currentJob.outputUrl;
 
-  if (!previewUrl) {
+  if (!previewUrl || !currentJob.id) {
     return (
       <Card>
         <CardContent className="p-8">
@@ -56,6 +56,9 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
       </Card>
     );
   }
+
+  // Always use the API preview URL based on jobId
+  const apiPreviewUrl = `/api/timelapse/${currentJob.id}/preview?sessionId=${localStorage.getItem('immich_session_id') || ''}`;
 
   return (
     <Card>
@@ -77,7 +80,7 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
         <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
           <video
             ref={videoRef}
-            src={previewUrl}
+            src={apiPreviewUrl}
             className="w-full h-full object-contain"
             controls
             onPlay={() => setIsPlaying(true)}

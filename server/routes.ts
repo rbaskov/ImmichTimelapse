@@ -214,8 +214,21 @@ export async function registerRoutes(
       return res.status(401).json({ error: "Not connected to Immich" });
     }
 
-    res.json({ message: "Timelapse creation started" });
+    // Create a temporary job object with pending status
+    const jobId = uuidv4();
+    const initialJob: TimelapseJob = {
+      id: jobId,
+      sessionId,
+      status: 'pending',
+      progress: 0,
+      totalFrames: assetIds.length,
+      processedFrames: 0,
+    };
 
+    // Send response with jobId immediately
+    res.json({ jobId, message: "Timelapse creation started" });
+
+    // Process timelapse asynchronously
     createTimelapse(client, assetIds, options, sessionId, (job: TimelapseJob) => {
       broadcastToSession(sessionId, { type: "timelapse_progress", job });
     }).catch((error) => {
@@ -223,7 +236,8 @@ export async function registerRoutes(
       broadcastToSession(sessionId, {
         type: "timelapse_progress",
         job: {
-          id: "error",
+          id: jobId,
+          sessionId,
           status: "error",
           progress: 0,
           totalFrames: assetIds.length,

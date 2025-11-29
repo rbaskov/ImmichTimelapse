@@ -145,21 +145,26 @@ export default function Home() {
       return;
     }
 
-    setCurrentJob({
-      id: 'pending',
-      status: 'pending',
-      progress: 0,
-      totalFrames: selectedCount,
-      processedFrames: 0,
-    });
-
     try {
       const sortedAssetIds = assets
         .filter(a => selectedAssets.has(a.id))
         .sort((a, b) => new Date(a.fileCreatedAt).getTime() - new Date(b.fileCreatedAt).getTime())
         .map(a => a.id);
 
-      await api.createTimelapse(sortedAssetIds, timelapseSettings);
+      const jobId = await api.createTimelapse(sortedAssetIds, timelapseSettings);
+      
+      setCurrentJob({
+        id: jobId,
+        status: 'pending',
+        progress: 0,
+        totalFrames: selectedCount,
+        processedFrames: 0,
+      });
+
+      toast({
+        title: 'Generating timelapse',
+        description: `Processing ${selectedCount} photos...`,
+      });
     } catch (error: any) {
       setCurrentJob({
         id: 'error',
@@ -245,7 +250,6 @@ export default function Home() {
           
           {showPreview && currentJob && (
             <VideoPreview 
-              videoUrl={api.getTimelapsePreviewUrl(currentJob.id)}
               onDownload={handleDownload} 
               onRegenerate={handleRegenerate} 
             />

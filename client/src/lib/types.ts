@@ -49,7 +49,7 @@ export interface TimelapseSettings {
 
 export interface TimelapseJob {
   id: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
+  status: 'pending' | 'downloading' | 'processing' | 'completed' | 'error';
   progress: number;
   totalFrames: number;
   processedFrames: number;
