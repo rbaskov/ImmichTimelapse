@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Settings2, Clock, Film, Monitor } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 
 interface TimelapseSettingsProps {
   selectedCount?: number;
@@ -11,6 +12,7 @@ interface TimelapseSettingsProps {
 
 export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseSettingsProps) {
   const { timelapseSettings, setTimelapseSettings } = useImmich();
+  const { t } = useLanguage();
 
   const fpsOptions = [10, 15, 24, 30, 60] as const;
   
@@ -23,14 +25,14 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
       <CardHeader className="p-4">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Settings2 className="h-4 w-4" />
-          Timelapse Settings
+          {t('settings.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
             <Film className="h-3 w-3" />
-            Frame Rate (FPS)
+            {t('settings.fps')}
           </Label>
           <ToggleGroup
             type="single"
@@ -61,7 +63,7 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
             <Monitor className="h-3 w-3" />
-            Resolution
+            {t('settings.resolution')}
           </Label>
           <Select
             value={timelapseSettings.resolution}
@@ -84,7 +86,7 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
             <Film className="h-3 w-3" />
-            Format
+            {t('settings.format')}
           </Label>
           <ToggleGroup
             type="single"
@@ -112,7 +114,7 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2 text-muted-foreground">
               <Clock className="h-3 w-3" />
-              Estimated Duration
+              {t('settings.fps')}
             </span>
             <span className="font-mono font-medium" data-testid="text-duration-estimate">
               {estimatedDuration}s

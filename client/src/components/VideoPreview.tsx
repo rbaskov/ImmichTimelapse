@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Download, RefreshCw, Film, Settings2 } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 import { useRef, useState } from 'react';
 
 interface VideoPreviewProps {
@@ -13,6 +14,7 @@ interface VideoPreviewProps {
 
 export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: VideoPreviewProps) {
   const { timelapseSettings, currentJob } = useImmich();
+  const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -33,8 +35,8 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
         <CardContent className="p-8">
           <div className="text-center text-muted-foreground">
             <Film className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">No preview available</p>
-            <p className="text-sm">Generate a timelapse to see the preview</p>
+            <p className="text-lg font-medium">{t('preview.noPreview')}</p>
+            <p className="text-sm">{t('preview.generate')}</p>
           </div>
         </CardContent>
       </Card>
@@ -49,8 +51,8 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
         <CardContent className="p-8">
           <div className="text-center text-muted-foreground">
             <Film className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">Preview unavailable</p>
-            <p className="text-sm">Could not load the timelapse preview</p>
+            <p className="text-lg font-medium">{t('preview.unavailable')}</p>
+            <p className="text-sm">{t('preview.couldNotLoad')}</p>
           </div>
         </CardContent>
       </Card>
@@ -66,7 +68,7 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
         <CardTitle className="text-base font-semibold flex items-center justify-between flex-wrap gap-2">
           <span className="flex items-center gap-2">
             <Play className="h-4 w-4" />
-            Preview
+            {t('preview.title')}
           </span>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-mono text-xs">
@@ -107,7 +109,7 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
             data-testid="button-download"
           >
             <Download className="h-4 w-4 mr-2" />
-            Download {timelapseSettings.format.toUpperCase()}
+            {t('preview.download')} {timelapseSettings.format.toUpperCase()}
           </Button>
           <Button
             variant="outline"
@@ -115,7 +117,7 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
             data-testid="button-regenerate"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Regenerate
+            {t('preview.regenerate')}
           </Button>
         </div>
       </CardContent>

@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Images, CheckSquare, Square, ImageOff } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 import type { ImmichAsset } from '@/lib/types';
 import * as api from '@/lib/api';
 import { useState } from 'react';
@@ -24,6 +25,7 @@ export default function PhotoGrid({ isLoading = false, onGenerateTimelapse }: Ph
     deselectAllAssets,
     connection 
   } = useImmich();
+  const { t } = useLanguage();
 
   const selectedCount = selectedAssets.size;
   const totalCount = assets.length;
@@ -34,8 +36,8 @@ export default function PhotoGrid({ isLoading = false, onGenerateTimelapse }: Ph
         <CardContent className="flex-1 flex items-center justify-center p-8">
           <div className="text-center text-muted-foreground">
             <ImageOff className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">No connection</p>
-            <p className="text-sm">Connect to your Immich server to browse photos</p>
+            <p className="text-lg font-medium">{t('grid.noPhotos')}</p>
+            <p className="text-sm">{t('grid.loadPhotos')}</p>
           </div>
         </CardContent>
       </Card>
@@ -68,8 +70,8 @@ export default function PhotoGrid({ isLoading = false, onGenerateTimelapse }: Ph
         <CardContent className="flex-1 flex items-center justify-center p-8">
           <div className="text-center text-muted-foreground">
             <Images className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium">No photos found</p>
-            <p className="text-sm">Adjust your filters to find photos</p>
+            <p className="text-lg font-medium">{t('grid.noPhotos')}</p>
+            <p className="text-sm">{t('grid.loadPhotos')}</p>
           </div>
         </CardContent>
       </Card>
@@ -82,7 +84,7 @@ export default function PhotoGrid({ isLoading = false, onGenerateTimelapse }: Ph
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <Images className="h-4 w-4" />
-            Photos
+            {t('grid.title')}
             <Badge variant="secondary" className="ml-1">
               {selectedCount}/{totalCount}
             </Badge>
@@ -95,7 +97,7 @@ export default function PhotoGrid({ isLoading = false, onGenerateTimelapse }: Ph
               data-testid="button-select-all"
             >
               <CheckSquare className="h-4 w-4 mr-1" />
-              All
+              {t('grid.selectAll')}
             </Button>
             <Button
               variant="outline"
@@ -104,14 +106,14 @@ export default function PhotoGrid({ isLoading = false, onGenerateTimelapse }: Ph
               data-testid="button-deselect-all"
             >
               <Square className="h-4 w-4 mr-1" />
-              None
+              {t('grid.deselectAll')}
             </Button>
             <Button
               onClick={onGenerateTimelapse}
               disabled={selectedCount === 0}
               data-testid="button-generate-timelapse"
             >
-              Create Timelapse
+              {t('grid.generate')}
             </Button>
           </div>
         </div>

@@ -8,6 +8,7 @@ import PhotoGrid from '@/components/PhotoGrid';
 import ProcessingProgress from '@/components/ProcessingProgress';
 import VideoPreview from '@/components/VideoPreview';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 import { useToast } from '@/hooks/use-toast';
 import * as api from '@/lib/api';
 
@@ -27,6 +28,7 @@ export default function Home() {
     filter,
     assets,
   } = useImmich();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [photoCount, setPhotoCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
@@ -53,13 +55,13 @@ export default function Home() {
 
           if (job.status === 'completed') {
             toast({
-              title: 'Timelapse created',
-              description: 'Your timelapse is ready to preview and download',
+              title: t('progress.createdSuccess'),
+              description: t('progress.readyPreview'),
             });
           } else if (job.status === 'error') {
             toast({
-              title: 'Error',
-              description: job.error || 'Failed to create timelapse',
+              title: t('progress.error'),
+              description: job.error || t('progress.errorCreating'),
               variant: 'destructive',
             });
           }
@@ -87,8 +89,8 @@ export default function Home() {
       return false;
     } catch (error: any) {
       toast({
-        title: 'Connection failed',
-        description: error.message || 'Could not connect to Immich server',
+        title: t('connection.connectionFailed'),
+        description: error.message || t('connection.connectionFailed'),
         variant: 'destructive',
       });
       return false;
@@ -114,13 +116,13 @@ export default function Home() {
       deselectAllAssets();
       
       toast({
-        title: 'Photos loaded',
-        description: `Found ${fetchedAssets.length} photos`,
+        title: t('toast.loadingPhotos'),
+        description: `Found ${fetchedAssets.length} ${t('filter.photosFound')}`,
       });
     } catch (error: any) {
       toast({
-        title: 'Failed to load photos',
-        description: error.message || 'Could not fetch photos from Immich',
+        title: t('toast.loadingFailed'),
+        description: error.message || t('toast.couldNotFetch'),
         variant: 'destructive',
       });
     } finally {
@@ -138,8 +140,8 @@ export default function Home() {
     const selectedCount = selectedAssets.size;
     if (selectedCount === 0) {
       toast({
-        title: 'No photos selected',
-        description: 'Please select photos to create a timelapse',
+        title: t('toast.selectPhotos'),
+        description: t('toast.selectPhotosDesc'),
         variant: 'destructive',
       });
       return;
@@ -162,8 +164,8 @@ export default function Home() {
       });
 
       toast({
-        title: 'Generating timelapse',
-        description: `Processing ${selectedCount} photos...`,
+        title: t('progress.creating'),
+        description: t('progress.generatingMsg'),
       });
     } catch (error: any) {
       setCurrentJob({
@@ -172,15 +174,15 @@ export default function Home() {
         progress: 0,
         totalFrames: selectedCount,
         processedFrames: 0,
-        error: error.message || 'Failed to start timelapse creation',
+        error: error.message || t('progress.errorCreating'),
       });
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to start timelapse creation',
+        title: t('toast.error'),
+        description: error.message || t('progress.errorCreating'),
         variant: 'destructive',
       });
     }
-  }, [selectedAssets, assets, timelapseSettings, setCurrentJob, toast]);
+  }, [selectedAssets, assets, timelapseSettings, setCurrentJob, toast, t]);
 
   const handleCancelProcessing = useCallback(() => {
     if (currentJob?.id && currentJob.id !== 'pending' && currentJob.id !== 'error') {
@@ -188,10 +190,10 @@ export default function Home() {
     }
     setCurrentJob(null);
     toast({
-      title: 'Processing cancelled',
-      description: 'Timelapse generation was cancelled',
+      title: t('progress.cancelled'),
+      description: t('progress.cancelled'),
     });
-  }, [currentJob, setCurrentJob, toast]);
+  }, [currentJob, setCurrentJob, toast, t]);
 
   const handleDownload = useCallback(() => {
     if (currentJob?.id && currentJob.status === 'completed') {
@@ -204,11 +206,11 @@ export default function Home() {
       document.body.removeChild(link);
       
       toast({
-        title: 'Download started',
-        description: `Downloading timelapse.${timelapseSettings.format}`,
+        title: t('preview.downloadStarted'),
+        description: `${t('preview.downloading')} timelapse.${timelapseSettings.format}`,
       });
     }
-  }, [currentJob, timelapseSettings.format, toast]);
+  }, [currentJob, timelapseSettings.format, toast, t]);
 
   const handleRegenerate = useCallback(() => {
     if (currentJob?.id && currentJob.id !== 'pending' && currentJob.id !== 'error') {
@@ -220,10 +222,10 @@ export default function Home() {
 
   const handleSettingsClick = useCallback(() => {
     toast({
-      title: 'Settings',
+      title: t('settings.title'),
       description: 'Settings panel coming soon',
     });
-  }, [toast]);
+  }, [toast, t]);
 
   const showPreview = currentJob?.status === 'completed';
   const showProgress = currentJob && currentJob.status !== 'completed';

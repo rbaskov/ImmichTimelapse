@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Filter, CalendarIcon, FolderOpen, Tag, X, Search } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 import { format } from 'date-fns';
 import { useState } from 'react';
 
@@ -18,6 +19,7 @@ interface FilterPanelProps {
 
 export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPanelProps) {
   const { filter, setFilter, albums, connection } = useImmich();
+  const { t } = useLanguage();
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
 
@@ -44,7 +46,7 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
       <CardHeader className="p-4">
         <CardTitle className="text-base font-semibold flex items-center gap-2">
           <Filter className="h-4 w-4" />
-          Filters
+          {t('filter.title')}
           {hasActiveFilters && (
             <Button
               variant="ghost"
@@ -63,7 +65,7 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
             <Search className="h-3 w-3" />
-            Filename
+            {t('filter.filename')}
           </Label>
           <Input
             placeholder="e.g., hiwatch_les* or *main*"
@@ -74,14 +76,14 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
             className="text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            Use * for prefix (hiwatch_les*) or suffix (*main*) or contains (*main*)
+            {t('filter.filename')}
           </p>
         </div>
 
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
             <CalendarIcon className="h-3 w-3" />
-            Date Range
+            {t('filter.dateFrom')} - {t('filter.dateTo')}
           </Label>
           <div className="flex gap-2">
             <Popover open={dateFromOpen} onOpenChange={setDateFromOpen}>
@@ -92,7 +94,7 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
                   className="flex-1 justify-start text-left font-normal"
                   data-testid="button-date-from"
                 >
-                  {filter.dateFrom ? format(new Date(filter.dateFrom), 'PP') : 'From'}
+                  {filter.dateFrom ? format(new Date(filter.dateFrom), 'PP') : t('filter.dateFrom')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">

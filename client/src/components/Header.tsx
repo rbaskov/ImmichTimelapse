@@ -69,6 +69,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
               data-testid="button-language-en"
               title="English"
             >
+              <span className="text-lg mr-1">🇺🇸</span>
               <span className="text-sm font-medium">EN</span>
             </Button>
             <Button
@@ -79,6 +80,7 @@ export default function Header({ onSettingsClick }: HeaderProps) {
               data-testid="button-language-ru"
               title="Русский"
             >
+              <span className="text-lg mr-1">🇷🇺</span>
               <span className="text-sm font-medium">RU</span>
             </Button>
           </div>

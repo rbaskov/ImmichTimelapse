@@ -3,6 +3,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle2, XCircle, Clock, Film, X } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 
 interface ProcessingProgressProps {
   onCancel?: () => void;
@@ -10,6 +11,7 @@ interface ProcessingProgressProps {
 
 export default function ProcessingProgress({ onCancel }: ProcessingProgressProps) {
   const { currentJob } = useImmich();
+  const { t } = useLanguage();
 
   if (!currentJob) return null;
 
@@ -31,11 +33,11 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
           {status === 'error' && <XCircle className="h-4 w-4 text-destructive" />}
           {status === 'pending' && <Clock className="h-4 w-4 text-status-away" />}
           
-          {status === 'pending' && 'Preparing...'}
-          {status === 'downloading' && 'Downloading Photos'}
-          {status === 'processing' && 'Creating Timelapse'}
-          {status === 'completed' && 'Timelapse Ready'}
-          {status === 'error' && 'Error'}
+          {status === 'pending' && t('progress.preparing')}
+          {status === 'downloading' && t('progress.downloading')}
+          {status === 'processing' && t('progress.creating')}
+          {status === 'completed' && t('progress.ready')}
+          {status === 'error' && t('progress.error')}
 
           {status === 'processing' && onCancel && (
             <Button
@@ -57,7 +59,7 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
             <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2 text-muted-foreground">
                 <Film className="h-3 w-3" />
-                {processedFrames} / {totalFrames} frames
+                {processedFrames} / {totalFrames} {t('progress.frames')}
               </span>
               <span className="font-mono font-medium" data-testid="text-progress-percent">
                 {Math.round(progress)}%
@@ -66,7 +68,7 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
             {estimatedTimeRemaining !== undefined && estimatedTimeRemaining > 0 && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                <span>~{formatTime(estimatedTimeRemaining)} remaining</span>
+                <span>~{formatTime(estimatedTimeRemaining)} {t('progress.remaining')}</span>
               </div>
             )}
           </>
@@ -75,7 +77,7 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
         {status === 'error' && (
           <div className="p-3 bg-destructive/10 rounded-md">
             <p className="text-sm text-destructive" data-testid="text-error-message">
-              {error || 'An error occurred while creating the timelapse'}
+              {error || t('progress.errorCreating')}
             </p>
           </div>
         )}
@@ -83,7 +85,7 @@ export default function ProcessingProgress({ onCancel }: ProcessingProgressProps
         {status === 'completed' && (
           <div className="flex items-center gap-2 text-sm text-status-online">
             <CheckCircle2 className="h-4 w-4" />
-            <span>Your timelapse is ready to preview and download</span>
+            <span>{t('progress.readyPreview')}</span>
           </div>
         )}
       </CardContent>

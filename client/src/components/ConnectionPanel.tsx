@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Server, Key, ChevronDown, ChevronUp, Loader2, CheckCircle2, XCircle, Trash2, Save } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
+import { useLanguage } from '@/lib/language-context';
 import { useToast } from '@/hooks/use-toast';
 import type { ServerProfile } from '@/lib/types';
 
@@ -16,6 +17,7 @@ interface ConnectionPanelProps {
 
 export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
   const { connection, setConnection } = useImmich();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [serverUrl, setServerUrl] = useState(connection.serverUrl);
   const [apiKey, setApiKey] = useState(connection.apiKey);
@@ -144,18 +146,18 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
             <div className="flex items-center justify-between cursor-pointer">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Server className="h-4 w-4" />
-                Connection
+                {t('connection.title')}
               </CardTitle>
               <div className="flex items-center gap-2">
                 {connection.isConnected ? (
                   <span className="flex items-center gap-1 text-xs text-status-online">
                     <CheckCircle2 className="h-3 w-3" />
-                    Connected
+                    {t('header.connected')}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <XCircle className="h-3 w-3" />
-                    Not connected
+                    {t('header.disconnected')}
                   </span>
                 )}
                 {isOpen ? (
@@ -171,10 +173,10 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
           <CardContent className="p-4 pt-0 space-y-4">
             {profiles.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm">Saved Profiles</Label>
+                <Label className="text-sm">{t('connection.savedProfiles')}</Label>
                 <Select value={selectedProfileId} onValueChange={handleLoadProfile}>
                   <SelectTrigger data-testid="select-profile" className="w-full">
-                    <SelectValue placeholder="Select a saved profile" />
+                    <SelectValue placeholder={t('connection.savedProfiles')} />
                   </SelectTrigger>
                   <SelectContent>
                     {profiles.map((profile) => (
@@ -193,14 +195,14 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                     data-testid="button-delete-profile"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    Delete Profile
+                    {t('connection.saveProfile')}
                   </Button>
                 )}
               </div>
             )}
             <div className="space-y-2">
               <Label htmlFor="server-url" className="text-sm">
-                Server URL
+                {t('connection.serverUrl')}
               </Label>
               <div className="relative">
                 <Server className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -218,7 +220,7 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="api-key" className="text-sm">
-                API Key
+                {t('connection.apiKey')}
               </Label>
               <div className="relative">
                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -242,7 +244,7 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                   className="w-full"
                   onClick={handleDisconnect}
                 >
-                  Disconnect
+                  {t('connection.disconnect')}
                 </Button>
                 <Button
                   data-testid="button-save-profile"
@@ -251,7 +253,7 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                   onClick={() => setShowSaveProfile(!showSaveProfile)}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Save Profile
+                  {t('connection.saveProfile')}
                 </Button>
               </>
             ) : (
@@ -265,16 +267,16 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                   {isConnecting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Connecting...
+                      {t('connection.connect')}...
                     </>
                   ) : (
-                    'Connect'
+                    t('connection.connect')
                   )}
                 </Button>
                 {showSaveProfile && (
                   <div className="space-y-2 border-t pt-4">
                     <Label htmlFor="profile-name" className="text-sm">
-                      Profile Name
+                      {t('connection.profileName')}
                     </Label>
                     <Input
                       id="profile-name"
@@ -291,7 +293,7 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                         className="flex-1"
                         onClick={handleSaveProfile}
                       >
-                        Save
+                        {t('connection.saveProfile')}
                       </Button>
                       <Button
                         variant="outline"
@@ -299,7 +301,7 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                         className="flex-1"
                         onClick={() => setShowSaveProfile(false)}
                       >
-                        Cancel
+                        {t('filter.apply')}
                       </Button>
                     </div>
                   </div>
