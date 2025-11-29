@@ -43,6 +43,10 @@ export interface TimelapseSettings {
   fps: 10 | 15 | 24 | 30 | 60;
   resolution: '720p' | '1080p' | '4K';
   format: 'mp4' | 'webm';
+  bitrate: 'low' | 'medium' | 'high';
+  codec: 'h264' | 'h265' | 'vp8' | 'vp9';
+  aspectRatio: '16:9' | '9:16' | '4:3' | '1:1';
+  interpolation: 'none' | 'linear';
 }
 
 export interface TimelapseJob {

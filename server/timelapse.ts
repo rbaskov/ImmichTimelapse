@@ -8,6 +8,10 @@ export interface TimelapseOptions {
   fps: number;
   resolution: '720p' | '1080p' | '4K';
   format: 'mp4' | 'webm';
+  bitrate: 'low' | 'medium' | 'high';
+  codec: 'h264' | 'h265' | 'vp8' | 'vp9';
+  aspectRatio: '16:9' | '9:16' | '4:3' | '1:1';
+  interpolation: 'none' | 'linear';
 }
 
 export interface TimelapseJob {
@@ -26,6 +30,19 @@ const resolutionMap = {
   '720p': { width: 1280, height: 720 },
   '1080p': { width: 1920, height: 1080 },
   '4K': { width: 3840, height: 2160 },
+};
+
+const aspectRatioMap: Record<string, [number, number]> = {
+  '16:9': [16, 9],
+  '9:16': [9, 16],
+  '4:3': [4, 3],
+  '1:1': [1, 1],
+};
+
+const bitrateMap = {
+  low: { mp4: '1500k', webm: '1200k' },
+  medium: { mp4: '4000k', webm: '3000k' },
+  high: { mp4: '8000k', webm: '6000k' },
 };
 
 const jobs = new Map<string, TimelapseJob>();
@@ -95,7 +112,22 @@ export async function createTimelapse(
     job.progress = 50;
     onProgress?.(job);
 
-    const { width, height } = resolutionMap[options.resolution];
+    const { width: baseWidth, height: baseHeight } = resolutionMap[options.resolution];
+    const [ratioW, ratioH] = aspectRatioMap[options.aspectRatio];
+    const aspectRatio = ratioW / ratioH;
+    const baseAspect = baseWidth / baseHeight;
+    
+    let width = baseWidth;
+    let height = baseHeight;
+    
+    if (aspectRatio > baseAspect) {
+      width = Math.round(baseHeight * aspectRatio);
+      width = width % 2 === 0 ? width : width + 1;
+    } else if (aspectRatio < baseAspect) {
+      height = Math.round(baseWidth / aspectRatio);
+      height = height % 2 === 0 ? height : height + 1;
+    }
+
     const ext = options.format;
     const outputFilename = `timelapse_${jobId}.${ext}`;
     const outputPath = path.join(OUTPUT_DIR, outputFilename);
@@ -105,29 +137,39 @@ export async function createTimelapse(
       
       let command = ffmpeg()
         .input(inputPattern)
-        .inputFPS(options.fps)
-        .videoFilters([
-          `scale=${width}:${height}:force_original_aspect_ratio=decrease`,
-          `pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`
-        ])
+        .inputFPS(options.fps);
+
+      const filters = [];
+      filters.push(`scale=${width}:${height}:force_original_aspect_ratio=decrease`);
+      filters.push(`pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`);
+      
+      if (options.interpolation === 'linear') {
+        filters.push('fps=fps=' + options.fps * 2);
+      }
+
+      command = command
+        .videoFilters(filters)
         .outputFPS(options.fps);
 
+      const bitrate = bitrateMap[options.bitrate][options.format === 'mp4' ? 'mp4' : 'webm'];
+
       if (options.format === 'mp4') {
+        const codec = options.codec === 'h265' ? 'libx265' : 'libx264';
         command = command
-          .videoCodec('libx264')
+          .videoCodec(codec)
           .outputOptions([
             '-pix_fmt yuv420p',
+            `-b:v ${bitrate}`,
             '-preset fast',
-            '-crf 23',
             '-movflags +faststart'
           ]);
       } else {
+        const codec = options.codec === 'vp8' ? 'libvpx' : 'libvpx-vp9';
         command = command
-          .videoCodec('libvpx-vp9')
+          .videoCodec(codec)
           .outputOptions([
             '-pix_fmt yuv420p',
-            '-crf 30',
-            '-b:v 0'
+            `-b:v ${bitrate}`,
           ]);
       }
 

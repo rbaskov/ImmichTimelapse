@@ -38,6 +38,10 @@ export function ImmichProvider({ children }: { children: ReactNode }) {
     fps: 24,
     resolution: '1080p',
     format: 'mp4',
+    bitrate: 'medium',
+    codec: 'h264',
+    aspectRatio: '16:9',
+    interpolation: 'none',
   });
   const [currentJob, setCurrentJob] = useState<TimelapseJob | null>(null);
   const [isLoading, setIsLoading] = useState(false);
