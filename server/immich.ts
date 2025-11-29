@@ -111,12 +111,26 @@ export class ImmichClient {
     const response = await this.client.post('/api/search/metadata', searchParams);
     let assets = response.data.assets?.items || response.data.assets || [];
     
-    // Filter by filename if provided
+    // Filter by filename if provided (supports wildcards: prefix*, *suffix, *contains*)
     if (params.filename) {
-      const searchText = params.filename.toLowerCase();
-      assets = assets.filter((asset: any) => 
-        asset.originalFileName?.toLowerCase().includes(searchText)
-      );
+      const pattern = params.filename.toLowerCase();
+      assets = assets.filter((asset: any) => {
+        const fileName = asset.originalFileName?.toLowerCase() || '';
+        
+        if (pattern.startsWith('*') && pattern.endsWith('*')) {
+          // *contains* pattern
+          return fileName.includes(pattern.slice(1, -1));
+        } else if (pattern.startsWith('*')) {
+          // *suffix pattern
+          return fileName.endsWith(pattern.slice(1));
+        } else if (pattern.endsWith('*')) {
+          // prefix* pattern
+          return fileName.startsWith(pattern.slice(0, -1));
+        } else {
+          // exact substring match
+          return fileName.includes(pattern);
+        }
+      });
     }
     
     return assets.map(this.mapAsset);

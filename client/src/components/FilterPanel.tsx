@@ -66,13 +66,16 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
             Filename
           </Label>
           <Input
-            placeholder="e.g., *main* for camera name"
+            placeholder="e.g., hiwatch_les* or *main*"
             value={filter.filename || ''}
             onChange={(e) => setFilter({ ...filter, filename: e.target.value || undefined })}
             disabled={!connection.isConnected}
             data-testid="input-filename-search"
             className="text-sm"
           />
+          <p className="text-xs text-muted-foreground">
+            Use * for prefix (hiwatch_les*) or suffix (*main*) or contains (*main*)
+          </p>
         </div>
 
         <div className="space-y-2">
