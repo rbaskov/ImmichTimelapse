@@ -138,10 +138,11 @@ export async function registerRoutes(
       
       if (albumId) {
         assets = await client.getAlbumAssets(albumId as string);
-      } else if (dateFrom || dateTo) {
+      } else if (dateFrom || dateTo || filename) {
+        // Use search API for date/filename filters
         const searchParams: ImmichSearchParams = {
           type: "IMAGE",
-          size: Number(limit) || 500,
+          size: Number(limit) || 1000,
         };
         if (dateFrom) searchParams.takenAfter = dateFrom as string;
         if (dateTo) searchParams.takenBefore = dateTo as string;
@@ -151,20 +152,13 @@ export async function registerRoutes(
         assets = await client.getAllAssets(Number(limit) || 500);
       }
 
-      // Filter by filename if provided
-      if (filename && !albumId) {
-        const searchText = (filename as string).toLowerCase();
-        assets = assets.filter(asset =>
-          asset.originalFileName.toLowerCase().includes(searchText)
-        );
-      }
-
       assets.sort((a, b) => 
         new Date(a.fileCreatedAt).getTime() - new Date(b.fileCreatedAt).getTime()
       );
 
       res.json(assets);
     } catch (error: any) {
+      console.error("Failed to get assets:", error);
       res.status(500).json({ error: error.message || "Failed to get assets" });
     }
   });
