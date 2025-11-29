@@ -11,34 +11,31 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('en');
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('language') as Language | null;
-    if (saved && (saved === 'en' || saved === 'ru')) {
-      setLanguageState(saved);
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('language') as Language | null;
+      if (saved === 'en' || saved === 'ru') {
+        return saved;
+      }
     }
-    setIsReady(true);
-  }, []);
+    return 'en';
+  });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('language', lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', lang);
+    }
   };
 
-  if (!isReady) {
-    return <>{children}</>;
-  }
+  const contextValue: LanguageContextType = {
+    language,
+    setLanguage,
+    t: (key: string) => translateText(key, language),
+  };
 
   return (
-    <LanguageContext.Provider
-      value={{
-        language,
-        setLanguage,
-        t: (key: string) => translateText(key, language),
-      }}
-    >
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );
