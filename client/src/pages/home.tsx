@@ -108,7 +108,7 @@ export default function Home() {
         dateFrom: filter.dateFrom,
         dateTo: filter.dateTo,
         filename: filter.filename,
-        limit: 500,
+        limit: 10000,
       });
       
       setAssets(fetchedAssets);

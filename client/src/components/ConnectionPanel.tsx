@@ -180,35 +180,39 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="p-4 pt-0 space-y-4">
-            {profiles.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm">{t('connection.savedProfiles')}</Label>
-                <Select value={selectedProfileId} onValueChange={handleLoadProfile}>
-                  <SelectTrigger data-testid="select-profile" className="w-full">
-                    <SelectValue placeholder={t('connection.savedProfiles')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {profiles.map((profile) => (
-                      <SelectItem key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedProfileId && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleDeleteProfile(selectedProfileId)}
-                    data-testid="button-delete-profile"
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Delete Profile
-                  </Button>
-                )}
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label className="text-sm">{t('connection.savedProfiles')}</Label>
+              {profiles.length > 0 ? (
+                <>
+                  <Select value={selectedProfileId} onValueChange={handleLoadProfile}>
+                    <SelectTrigger data-testid="select-profile" className="w-full">
+                      <SelectValue placeholder={t('connection.savedProfiles')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {profiles.map((profile) => (
+                        <SelectItem key={profile.id} value={profile.id}>
+                          {profile.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedProfileId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleDeleteProfile(selectedProfileId)}
+                      data-testid="button-delete-profile"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete Profile
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No saved profiles yet</p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="server-url" className="text-sm">
                 {t('connection.serverUrl')}
