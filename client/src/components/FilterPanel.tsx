@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Filter, CalendarIcon, FolderOpen, Tag, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Filter, CalendarIcon, FolderOpen, Tag, X, Search } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import { format } from 'date-fns';
 import { useState } from 'react';
@@ -36,7 +37,7 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
     setFilter({});
   };
 
-  const hasActiveFilters = filter.dateFrom || filter.dateTo || filter.albumId || (filter.tags && filter.tags.length > 0);
+  const hasActiveFilters = filter.dateFrom || filter.dateTo || filter.albumId || (filter.tags && filter.tags.length > 0) || filter.filename;
 
   return (
     <Card>
@@ -59,6 +60,21 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-4">
+        <div className="space-y-2">
+          <Label className="text-sm flex items-center gap-2">
+            <Search className="h-3 w-3" />
+            Filename
+          </Label>
+          <Input
+            placeholder="e.g., *main* for camera name"
+            value={filter.filename || ''}
+            onChange={(e) => setFilter({ ...filter, filename: e.target.value || undefined })}
+            disabled={!connection.isConnected}
+            data-testid="input-filename-search"
+            className="text-sm"
+          />
+        </div>
+
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
             <CalendarIcon className="h-3 w-3" />

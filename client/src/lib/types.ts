@@ -38,6 +38,7 @@ export interface PhotoFilter {
   dateTo?: string;
   albumId?: string;
   tags?: string[];
+  filename?: string;
 }
 
 export interface TimelapseSettings {

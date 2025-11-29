@@ -36,6 +36,7 @@ export interface ImmichSearchParams {
   type?: 'IMAGE' | 'VIDEO';
   size?: number;
   page?: number;
+  filename?: string;
 }
 
 export class ImmichClient {
@@ -108,7 +109,16 @@ export class ImmichClient {
     }
 
     const response = await this.client.post('/api/search/metadata', searchParams);
-    const assets = response.data.assets?.items || response.data.assets || [];
+    let assets = response.data.assets?.items || response.data.assets || [];
+    
+    // Filter by filename if provided
+    if (params.filename) {
+      const searchText = params.filename.toLowerCase();
+      assets = assets.filter((asset: any) => 
+        asset.originalFileName?.toLowerCase().includes(searchText)
+      );
+    }
+    
     return assets.map(this.mapAsset);
   }
 
