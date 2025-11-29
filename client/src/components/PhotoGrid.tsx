@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Images, CheckSquare, Square, ImageOff } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import type { ImmichAsset } from '@/lib/types';
+import * as api from '@/lib/api';
+import { useState } from 'react';
 
 interface PhotoGridProps {
   isLoading?: boolean;
@@ -139,8 +141,8 @@ interface PhotoThumbnailProps {
 }
 
 function PhotoThumbnail({ asset, isSelected, onToggle }: PhotoThumbnailProps) {
-  // todo: remove mock functionality - this should use actual Immich thumbnail URL
-  const thumbnailUrl = `https://picsum.photos/seed/${asset.id}/300/300`;
+  const [imageError, setImageError] = useState(false);
+  const thumbnailUrl = api.getThumbnailUrl(asset.id);
 
   return (
     <div
@@ -152,12 +154,19 @@ function PhotoThumbnail({ asset, isSelected, onToggle }: PhotoThumbnailProps) {
       onClick={onToggle}
       data-testid={`photo-thumbnail-${asset.id}`}
     >
-      <img
-        src={thumbnailUrl}
-        alt={asset.originalFileName}
-        className="w-full h-full object-cover"
-        loading="lazy"
-      />
+      {imageError ? (
+        <div className="w-full h-full bg-muted flex items-center justify-center">
+          <ImageOff className="h-8 w-8 text-muted-foreground" />
+        </div>
+      ) : (
+        <img
+          src={thumbnailUrl}
+          alt={asset.originalFileName}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setImageError(true)}
+        />
+      )}
       <div 
         className={`
           absolute inset-0 bg-black/40 transition-opacity

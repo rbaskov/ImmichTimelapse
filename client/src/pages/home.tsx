@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Header from '@/components/Header';
 import ConnectionPanel from '@/components/ConnectionPanel';
@@ -9,7 +9,7 @@ import ProcessingProgress from '@/components/ProcessingProgress';
 import VideoPreview from '@/components/VideoPreview';
 import { useImmich } from '@/lib/immich-context';
 import { useToast } from '@/hooks/use-toast';
-import type { ImmichAsset, ImmichAlbum } from '@/lib/types';
+import * as api from '@/lib/api';
 
 export default function Home() {
   const { 
@@ -18,76 +18,121 @@ export default function Home() {
     setAssets, 
     setAlbums,
     selectedAssets,
+    deselectAllAssets,
     setCurrentJob,
     currentJob,
     timelapseSettings,
     isLoading,
     setIsLoading,
+    filter,
+    assets,
   } = useImmich();
   const { toast } = useToast();
   const [photoCount, setPhotoCount] = useState(0);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  // todo: remove mock functionality - this simulates fetching albums from Immich
+  useEffect(() => {
+    api.getSessionId();
+  }, []);
+
+  useEffect(() => {
+    if (connection.isConnected && !wsRef.current) {
+      wsRef.current = api.createWebSocketConnection((data) => {
+        if (data.type === 'timelapse_progress') {
+          const job = data.job;
+          setCurrentJob({
+            id: job.id,
+            status: job.status,
+            progress: job.progress,
+            totalFrames: job.totalFrames,
+            processedFrames: job.processedFrames,
+            estimatedTimeRemaining: job.estimatedTimeRemaining,
+            outputUrl: job.outputPath ? api.getTimelapsePreviewUrl(job.id) : undefined,
+            error: job.error,
+          });
+
+          if (job.status === 'completed') {
+            toast({
+              title: 'Timelapse created',
+              description: 'Your timelapse is ready to preview and download',
+            });
+          } else if (job.status === 'error') {
+            toast({
+              title: 'Error',
+              description: job.error || 'Failed to create timelapse',
+              variant: 'destructive',
+            });
+          }
+        }
+      });
+    }
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [connection.isConnected, setCurrentJob, toast]);
+
   const handleConnect = useCallback(async (serverUrl: string, apiKey: string) => {
-    console.log('Connecting to:', serverUrl);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simulate fetching albums
-    const mockAlbums: ImmichAlbum[] = [
-      { id: '1', albumName: 'Vacation 2024', assetCount: 342 },
-      { id: '2', albumName: 'Family Photos', assetCount: 156 },
-      { id: '3', albumName: 'Nature', assetCount: 89 },
-      { id: '4', albumName: 'Architecture', assetCount: 67 },
-      { id: '5', albumName: 'Street Photography', assetCount: 234 },
-    ];
-    setAlbums(mockAlbums);
-    
-    return true;
-  }, [setAlbums]);
+    try {
+      const result = await api.connectToImmich(serverUrl, apiKey);
+      
+      if (result.success) {
+        const albums = await api.getAlbums();
+        setAlbums(albums);
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      toast({
+        title: 'Connection failed',
+        description: error.message || 'Could not connect to Immich server',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, [setAlbums, toast]);
 
-  // todo: remove mock functionality - this simulates fetching photos from Immich
   const handleApplyFilters = useCallback(async () => {
     if (!connection.isConnected) return;
     
     setIsLoading(true);
-    console.log('Applying filters...');
     
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Generate mock assets
-    const count = Math.floor(Math.random() * 100) + 50;
-    const mockAssets: ImmichAsset[] = Array.from({ length: count }, (_, i) => ({
-      id: `asset-${Date.now()}-${i + 1}`,
-      deviceAssetId: `device-${i + 1}`,
-      ownerId: 'user-1',
-      deviceId: 'device-1',
-      type: 'IMAGE',
-      originalPath: `/photos/photo-${i + 1}.jpg`,
-      originalFileName: `IMG_${String(i + 1).padStart(4, '0')}.jpg`,
-      fileCreatedAt: new Date(Date.now() - i * 3600000).toISOString(),
-      fileModifiedAt: new Date(Date.now() - i * 3600000).toISOString(),
-      isFavorite: i % 7 === 0,
-      duration: null,
-    }));
-    
-    setAssets(mockAssets);
-    setPhotoCount(count);
-    setIsLoading(false);
-    
-    toast({
-      title: 'Photos loaded',
-      description: `Found ${count} photos matching your filters`,
-    });
-  }, [connection.isConnected, setAssets, setIsLoading, toast]);
+    try {
+      const fetchedAssets = await api.getAssets({
+        albumId: filter.albumId,
+        dateFrom: filter.dateFrom,
+        dateTo: filter.dateTo,
+        limit: 500,
+      });
+      
+      setAssets(fetchedAssets);
+      setPhotoCount(fetchedAssets.length);
+      deselectAllAssets();
+      
+      toast({
+        title: 'Photos loaded',
+        description: `Found ${fetchedAssets.length} photos`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to load photos',
+        description: error.message || 'Could not fetch photos from Immich',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [connection.isConnected, filter, setAssets, setIsLoading, deselectAllAssets, toast]);
 
-  // Auto-load photos when connected
   useEffect(() => {
-    if (connection.isConnected) {
+    if (connection.isConnected && assets.length === 0) {
       handleApplyFilters();
     }
   }, [connection.isConnected]);
 
-  // todo: remove mock functionality - this simulates timelapse generation
   const handleGenerateTimelapse = useCallback(async () => {
     const selectedCount = selectedAssets.size;
     if (selectedCount === 0) {
@@ -99,73 +144,75 @@ export default function Home() {
       return;
     }
 
-    // Start processing
     setCurrentJob({
-      id: `job-${Date.now()}`,
+      id: 'pending',
       status: 'pending',
       progress: 0,
       totalFrames: selectedCount,
       processedFrames: 0,
-      estimatedTimeRemaining: Math.round(selectedCount * 0.5),
     });
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const sortedAssetIds = assets
+        .filter(a => selectedAssets.has(a.id))
+        .sort((a, b) => new Date(a.fileCreatedAt).getTime() - new Date(b.fileCreatedAt).getTime())
+        .map(a => a.id);
 
-    // Simulate processing
-    const totalFrames = selectedCount;
-    for (let i = 0; i <= totalFrames; i++) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      const progress = (i / totalFrames) * 100;
+      await api.createTimelapse(sortedAssetIds, timelapseSettings);
+    } catch (error: any) {
       setCurrentJob({
-        id: `job-${Date.now()}`,
-        status: 'processing',
-        progress,
-        totalFrames,
-        processedFrames: i,
-        estimatedTimeRemaining: Math.round((totalFrames - i) * 0.05),
+        id: 'error',
+        status: 'error',
+        progress: 0,
+        totalFrames: selectedCount,
+        processedFrames: 0,
+        error: error.message || 'Failed to start timelapse creation',
+      });
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to start timelapse creation',
+        variant: 'destructive',
       });
     }
-
-    // Complete
-    setCurrentJob({
-      id: `job-${Date.now()}`,
-      status: 'completed',
-      progress: 100,
-      totalFrames,
-      processedFrames: totalFrames,
-      outputUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    });
-
-    toast({
-      title: 'Timelapse created',
-      description: 'Your timelapse is ready to preview and download',
-    });
-  }, [selectedAssets, setCurrentJob, toast]);
+  }, [selectedAssets, assets, timelapseSettings, setCurrentJob, toast]);
 
   const handleCancelProcessing = useCallback(() => {
+    if (currentJob?.id && currentJob.id !== 'pending' && currentJob.id !== 'error') {
+      api.deleteTimelapse(currentJob.id).catch(console.error);
+    }
     setCurrentJob(null);
     toast({
       title: 'Processing cancelled',
       description: 'Timelapse generation was cancelled',
     });
-  }, [setCurrentJob, toast]);
+  }, [currentJob, setCurrentJob, toast]);
 
   const handleDownload = useCallback(() => {
-    // todo: remove mock functionality - implement actual download
-    console.log('Downloading timelapse...');
-    toast({
-      title: 'Download started',
-      description: `Downloading timelapse.${timelapseSettings.format}`,
-    });
-  }, [timelapseSettings.format, toast]);
+    if (currentJob?.id && currentJob.status === 'completed') {
+      const downloadUrl = api.getTimelapseDownloadUrl(currentJob.id);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `timelapse.${timelapseSettings.format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: 'Download started',
+        description: `Downloading timelapse.${timelapseSettings.format}`,
+      });
+    }
+  }, [currentJob, timelapseSettings.format, toast]);
 
   const handleRegenerate = useCallback(() => {
+    if (currentJob?.id && currentJob.id !== 'pending' && currentJob.id !== 'error') {
+      api.deleteTimelapse(currentJob.id).catch(console.error);
+    }
     setCurrentJob(null);
     handleGenerateTimelapse();
-  }, [setCurrentJob, handleGenerateTimelapse]);
+  }, [currentJob, setCurrentJob, handleGenerateTimelapse]);
 
   const handleSettingsClick = useCallback(() => {
-    console.log('Settings clicked');
     toast({
       title: 'Settings',
       description: 'Settings panel coming soon',
@@ -180,7 +227,6 @@ export default function Home() {
       <Header onSettingsClick={handleSettingsClick} />
       
       <div className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full">
-        {/* Sidebar */}
         <aside className="w-full lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r bg-card/50">
           <ScrollArea className="h-auto lg:h-[calc(100vh-3.5rem)]">
             <div className="p-4 space-y-4">
@@ -191,14 +237,14 @@ export default function Home() {
           </ScrollArea>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 flex flex-col min-h-0 p-4 gap-4">
           {showProgress && (
             <ProcessingProgress onCancel={handleCancelProcessing} />
           )}
           
-          {showPreview && (
+          {showPreview && currentJob && (
             <VideoPreview 
+              videoUrl={api.getTimelapsePreviewUrl(currentJob.id)}
               onDownload={handleDownload} 
               onRegenerate={handleRegenerate} 
             />

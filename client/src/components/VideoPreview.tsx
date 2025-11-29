@@ -41,8 +41,21 @@ export default function VideoPreview({ videoUrl, onDownload, onRegenerate }: Vid
     );
   }
 
-  // todo: remove mock functionality - use actual video URL
-  const previewUrl = videoUrl || currentJob.outputUrl || 'https://www.w3schools.com/html/mov_bbb.mp4';
+  const previewUrl = videoUrl || currentJob.outputUrl;
+
+  if (!previewUrl) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <div className="text-center text-muted-foreground">
+            <Film className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">Preview unavailable</p>
+            <p className="text-sm">Could not load the timelapse preview</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
