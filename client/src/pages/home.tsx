@@ -105,6 +105,7 @@ export default function Home() {
         albumId: filter.albumId,
         dateFrom: filter.dateFrom,
         dateTo: filter.dateTo,
+        filename: filter.filename,
         limit: 500,
       });
       

@@ -122,7 +122,7 @@ export async function registerRoutes(
   });
 
   app.get("/api/immich/assets", async (req: Request, res: Response) => {
-    const { sessionId, albumId, dateFrom, dateTo, limit } = req.query;
+    const { sessionId, albumId, dateFrom, dateTo, filename, limit } = req.query;
 
     if (!sessionId) {
       return res.status(400).json({ error: "Missing sessionId" });
@@ -145,9 +145,18 @@ export async function registerRoutes(
         };
         if (dateFrom) searchParams.takenAfter = dateFrom as string;
         if (dateTo) searchParams.takenBefore = dateTo as string;
+        if (filename) searchParams.filename = filename as string;
         assets = await client.searchAssets(searchParams);
       } else {
         assets = await client.getAllAssets(Number(limit) || 500);
+      }
+
+      // Filter by filename if provided
+      if (filename && !albumId) {
+        const searchText = (filename as string).toLowerCase();
+        assets = assets.filter(asset =>
+          asset.originalFileName.toLowerCase().includes(searchText)
+        );
       }
 
       assets.sort((a, b) => 

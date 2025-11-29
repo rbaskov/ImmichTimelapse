@@ -67,6 +67,7 @@ export async function getAssets(params: {
   albumId?: string;
   dateFrom?: string;
   dateTo?: string;
+  filename?: string;
   limit?: number;
 }): Promise<ImmichAsset[]> {
   const sid = await getSessionId();
@@ -75,6 +76,7 @@ export async function getAssets(params: {
   if (params.albumId) queryParams.append('albumId', params.albumId);
   if (params.dateFrom) queryParams.append('dateFrom', params.dateFrom);
   if (params.dateTo) queryParams.append('dateTo', params.dateTo);
+  if (params.filename) queryParams.append('filename', params.filename);
   if (params.limit) queryParams.append('limit', String(params.limit));
 
   return request(`/immich/assets?${queryParams}`);
