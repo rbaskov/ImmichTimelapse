@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import https from 'https';
 
 export interface ImmichAlbum {
   id: string;
@@ -49,9 +50,8 @@ export class ImmichClient {
         'Accept': 'application/json',
       },
       timeout: 30000,
-      httpsAgent: {
-        rejectUnauthorized: false,
-      } as any,
+      httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+      httpAgent: new (require('http').Agent)(),
     });
   }
 
