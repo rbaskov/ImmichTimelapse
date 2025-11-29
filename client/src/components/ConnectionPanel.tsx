@@ -268,24 +268,6 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                   <Save className="h-4 w-4 mr-2" />
                   {t('connection.saveProfile')}
                 </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  data-testid="button-connect"
-                  className="w-full"
-                  onClick={handleConnect}
-                  disabled={isConnecting}
-                >
-                  {isConnecting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t('connection.connect')}...
-                    </>
-                  ) : (
-                    t('connection.connect')
-                  )}
-                </Button>
                 {showSaveProfile && (
                   <div className="space-y-2 border-t pt-4">
                     <Label htmlFor="profile-name" className="text-sm">
@@ -314,12 +296,28 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                         className="flex-1"
                         onClick={() => setShowSaveProfile(false)}
                       >
-                        {t('filter.apply')}
+                        Cancel
                       </Button>
                     </div>
                   </div>
                 )}
               </>
+            ) : (
+              <Button
+                data-testid="button-connect"
+                className="w-full"
+                onClick={handleConnect}
+                disabled={isConnecting}
+              >
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {t('connection.connect')}...
+                  </>
+                ) : (
+                  t('connection.connect')
+                )}
+              </Button>
             )}
           </CardContent>
         </CollapsibleContent>
