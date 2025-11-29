@@ -95,29 +95,45 @@ export class ImmichClient {
   }
 
   async searchAssets(params: ImmichSearchParams): Promise<ImmichAsset[]> {
-    const searchParams: any = {
-      type: params.type || 'IMAGE',
-      take: params.size || 10000,
-      skip: 0,
-    };
+    const pageSize = 250; // Immich API limit per request
+    let allAssets: any[] = [];
+    let skip = 0;
+    const limit = params.size || 10000;
 
-    if (params.takenAfter) {
-      searchParams.startDate = params.takenAfter;
-    }
-    if (params.takenBefore) {
-      searchParams.endDate = params.takenBefore;
+    // Paginate through search results since API limits to 250 per request
+    while (skip < limit) {
+      const searchParams: any = {
+        type: params.type || 'IMAGE',
+        take: Math.min(pageSize, limit - skip),
+        skip: skip,
+      };
+
+      if (params.takenAfter) {
+        searchParams.startDate = params.takenAfter;
+      }
+      if (params.takenBefore) {
+        searchParams.endDate = params.takenBefore;
+      }
+
+      const response = await this.client.post('/api/search/metadata', searchParams);
+      let assets = Array.isArray(response.data) ? response.data : 
+                   (response.data.assets?.items || response.data.assets || []);
+      
+      if (!assets || assets.length === 0) break;
+      
+      allAssets = allAssets.concat(assets);
+      skip += assets.length;
+      
+      // If we got fewer results than requested, we've reached the end
+      if (assets.length < pageSize) break;
     }
 
-    const response = await this.client.post('/api/search/metadata', searchParams);
-    let assets = Array.isArray(response.data) ? response.data : 
-                 (response.data.assets?.items || response.data.assets || []);
-    
-    assets = assets.filter((asset: any) => asset.type === 'IMAGE');
+    allAssets = allAssets.filter((asset: any) => asset.type === 'IMAGE');
     
     // Filter by filename if provided (supports wildcards: prefix*, *suffix, *contains*)
     if (params.filename) {
       const pattern = params.filename.toLowerCase();
-      assets = assets.filter((asset: any) => {
+      allAssets = allAssets.filter((asset: any) => {
         const fileName = asset.originalFileName?.toLowerCase() || '';
         
         if (pattern.startsWith('*') && pattern.endsWith('*')) {
@@ -136,7 +152,7 @@ export class ImmichClient {
       });
     }
     
-    return assets.map(this.mapAsset);
+    return allAssets.map(this.mapAsset);
   }
 
   async getAllAssets(limit: number = 10000): Promise<ImmichAsset[]> {
