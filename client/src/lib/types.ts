@@ -30,14 +30,12 @@ export interface ImmichAsset {
     state?: string;
     country?: string;
   };
-  tags?: string[];
 }
 
 export interface PhotoFilter {
   dateFrom?: string;
   dateTo?: string;
   albumId?: string;
-  tags?: string[];
   filename?: string;
 }
 

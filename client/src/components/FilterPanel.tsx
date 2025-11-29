@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Filter, CalendarIcon, FolderOpen, Tag, X, Search } from 'lucide-react';
+import { Filter, CalendarIcon, FolderOpen, X, Search } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import { useLanguage } from '@/lib/language-context';
 import { format } from 'date-fns';
@@ -23,23 +23,11 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
 
-  // todo: remove mock functionality
-  const availableTags = ['nature', 'family', 'travel', 'landscape', 'portrait', 'architecture'];
-
-  const handleTagToggle = (tag: string) => {
-    const currentTags = filter.tags || [];
-    if (currentTags.includes(tag)) {
-      setFilter({ ...filter, tags: currentTags.filter(t => t !== tag) });
-    } else {
-      setFilter({ ...filter, tags: [...currentTags, tag] });
-    }
-  };
-
   const clearFilters = () => {
     setFilter({});
   };
 
-  const hasActiveFilters = filter.dateFrom || filter.dateTo || filter.albumId || (filter.tags && filter.tags.length > 0) || filter.filename;
+  const hasActiveFilters = filter.dateFrom || filter.dateTo || filter.albumId || filter.filename;
 
   return (
     <Card>
@@ -157,29 +145,6 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm flex items-center gap-2">
-            <Tag className="h-3 w-3" />
-            Tags
-          </Label>
-          <div className="flex flex-wrap gap-1">
-            {availableTags.map((tag) => {
-              const isSelected = filter.tags?.includes(tag);
-              return (
-                <Badge
-                  key={tag}
-                  variant={isSelected ? 'default' : 'outline'}
-                  className={`cursor-pointer text-xs toggle-elevate ${isSelected ? 'toggle-elevated' : ''}`}
-                  onClick={() => handleTagToggle(tag)}
-                  data-testid={`badge-tag-${tag}`}
-                >
-                  {tag}
-                </Badge>
-              );
-            })}
-          </div>
         </div>
 
         <Button
