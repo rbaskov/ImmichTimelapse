@@ -123,22 +123,30 @@ export function createWebSocketConnection(
   const sid = sessionId || localStorage.getItem('immich_session_id');
   if (!sid) return null;
 
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const ws = new WebSocket(`${protocol}//${window.location.host}/ws?sessionId=${sid}`);
+  try {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || `${window.location.hostname}:${window.location.port || (window.location.protocol === 'https:' ? '443' : '80')}`;
+    const wsUrl = `${protocol}//${host}/ws?sessionId=${sid}`;
+    
+    const ws = new WebSocket(wsUrl);
 
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      onMessage(data);
-    } catch (e) {
-      console.error('Failed to parse WebSocket message:', e);
-    }
-  };
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        onMessage(data);
+      } catch (e) {
+        console.error('Failed to parse WebSocket message:', e);
+      }
+    };
 
-  ws.onerror = (error) => {
-    console.error('WebSocket error:', error);
-    onError?.(error);
-  };
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      onError?.(error);
+    };
 
-  return ws;
+    return ws;
+  } catch (error) {
+    console.error('Failed to create WebSocket connection:', error);
+    return null;
+  }
 }
