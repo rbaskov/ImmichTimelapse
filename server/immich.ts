@@ -58,8 +58,8 @@ export class ImmichClient {
 
   async validateConnection(): Promise<boolean> {
     try {
-      const response = await this.client.get('/api/server-info/ping');
-      return response.data?.res === 'pong';
+      const response = await this.client.get('/api/users/me');
+      return !!response.data?.id;
     } catch (error) {
       console.error('Failed to validate Immich connection:', error);
       return false;

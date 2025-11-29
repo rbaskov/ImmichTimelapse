@@ -125,8 +125,9 @@ export function createWebSocketConnection(
 
   try {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host || window.location.hostname || 'localhost';
-    const wsUrl = `${protocol}//${host}/ws?sessionId=${sid}`;
+    const hostname = window.location.hostname || 'localhost';
+    const port = window.location.port ? ':' + window.location.port : '';
+    const wsUrl = `${protocol}//${hostname}${port}/ws?sessionId=${sid}`;
     
     const ws = new WebSocket(wsUrl);
 
