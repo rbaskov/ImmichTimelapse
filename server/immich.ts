@@ -140,10 +140,29 @@ export class ImmichClient {
   }
 
   async getAllAssets(limit: number = 10000): Promise<ImmichAsset[]> {
-    const response = await this.client.get('/api/assets', {
-      params: { take: limit },
-    });
-    return response.data
+    const pageSize = 250; // Immich API limit per request
+    let allAssets: any[] = [];
+    let skip = 0;
+
+    // Paginate through results since API limits to 250 per request
+    while (skip < limit) {
+      const response = await this.client.get('/api/assets', {
+        params: { 
+          take: Math.min(pageSize, limit - skip),
+          skip: skip
+        },
+      });
+
+      if (!response.data || response.data.length === 0) break;
+      
+      allAssets = allAssets.concat(response.data);
+      skip += response.data.length;
+      
+      // If we got fewer results than requested, we've reached the end
+      if (response.data.length < pageSize) break;
+    }
+
+    return allAssets
       .filter((asset: any) => asset.type === 'IMAGE')
       .map(this.mapAsset);
   }
