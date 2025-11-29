@@ -10,11 +10,35 @@ interface TimelapseSettingsProps {
   selectedCount?: number;
 }
 
+const resolutionsByAspectRatio = {
+  '16:9': [
+    { value: '720p', label: '720p (1280x720)' },
+    { value: '1080p', label: '1080p (1920x1080)' },
+    { value: '4K', label: '4K (3840x2160)' },
+  ],
+  '9:16': [
+    { value: '720p', label: '720p (720x1280)' },
+    { value: '1080p', label: '1080p (1080x1920)' },
+    { value: '4K', label: '4K (2160x3840)' },
+  ],
+  '4:3': [
+    { value: '720p', label: '720p (960x720)' },
+    { value: '1080p', label: '1080p (1440x1080)' },
+    { value: '4K', label: '4K (2880x2160)' },
+  ],
+  '1:1': [
+    { value: '720p', label: '720p (720x720)' },
+    { value: '1080p', label: '1080p (1080x1080)' },
+    { value: '4K', label: '4K (3840x3840)' },
+  ],
+};
+
 export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseSettingsProps) {
   const { timelapseSettings, setTimelapseSettings } = useImmich();
   const { t } = useLanguage();
 
   const fpsOptions = [10, 15, 24, 30, 60] as const;
+  const availableResolutions = resolutionsByAspectRatio[timelapseSettings.aspectRatio];
   
   const estimatedDuration = selectedCount > 0 
     ? (selectedCount / timelapseSettings.fps).toFixed(1) 
@@ -62,6 +86,34 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
 
         <div className="space-y-2">
           <Label className="text-sm flex items-center gap-2">
+            <Maximize2 className="h-3 w-3" />
+            Aspect Ratio
+          </Label>
+          <Select
+            value={timelapseSettings.aspectRatio}
+            onValueChange={(value) => {
+              const newAspect = value as typeof timelapseSettings.aspectRatio;
+              setTimelapseSettings({
+                ...timelapseSettings,
+                aspectRatio: newAspect,
+                resolution: '1080p',
+              });
+            }}
+          >
+            <SelectTrigger data-testid="select-aspect-ratio">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
+              <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+              <SelectItem value="4:3">4:3 (Standard)</SelectItem>
+              <SelectItem value="1:1">1:1 (Square)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm flex items-center gap-2">
             <Monitor className="h-3 w-3" />
             {t('settings.resolution')}
           </Label>
@@ -76,9 +128,11 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="720p">720p (1280x720)</SelectItem>
-              <SelectItem value="1080p">1080p (1920x1080)</SelectItem>
-              <SelectItem value="4K">4K (3840x2160)</SelectItem>
+              {availableResolutions.map((res) => (
+                <SelectItem key={res.value} value={res.value}>
+                  {res.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -160,30 +214,6 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
               <SelectItem value="h265">H.265/HEVC</SelectItem>
               <SelectItem value="vp8">VP8 (WebM)</SelectItem>
               <SelectItem value="vp9">VP9 (WebM)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm flex items-center gap-2">
-            <Maximize2 className="h-3 w-3" />
-            Aspect Ratio
-          </Label>
-          <Select
-            value={timelapseSettings.aspectRatio}
-            onValueChange={(value) => setTimelapseSettings({
-              ...timelapseSettings,
-              aspectRatio: value as typeof timelapseSettings.aspectRatio,
-            })}
-          >
-            <SelectTrigger data-testid="select-aspect-ratio">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
-              <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
-              <SelectItem value="4:3">4:3 (Standard)</SelectItem>
-              <SelectItem value="1:1">1:1 (Square)</SelectItem>
             </SelectContent>
           </Select>
         </div>

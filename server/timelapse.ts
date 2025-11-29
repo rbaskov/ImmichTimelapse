@@ -26,10 +26,25 @@ export interface TimelapseJob {
   error?: string;
 }
 
-const resolutionMap = {
-  '720p': { width: 1280, height: 720 },
-  '1080p': { width: 1920, height: 1080 },
-  '4K': { width: 3840, height: 2160 },
+const resolutionMap: Record<string, Record<string, { width: number; height: number }>> = {
+  '720p': {
+    '16:9': { width: 1280, height: 720 },
+    '9:16': { width: 720, height: 1280 },
+    '4:3': { width: 960, height: 720 },
+    '1:1': { width: 720, height: 720 },
+  },
+  '1080p': {
+    '16:9': { width: 1920, height: 1080 },
+    '9:16': { width: 1080, height: 1920 },
+    '4:3': { width: 1440, height: 1080 },
+    '1:1': { width: 1080, height: 1080 },
+  },
+  '4K': {
+    '16:9': { width: 3840, height: 2160 },
+    '9:16': { width: 2160, height: 3840 },
+    '4:3': { width: 2880, height: 2160 },
+    '1:1': { width: 3840, height: 3840 },
+  },
 };
 
 const aspectRatioMap: Record<string, [number, number]> = {
@@ -112,21 +127,7 @@ export async function createTimelapse(
     job.progress = 50;
     onProgress?.(job);
 
-    const { width: baseWidth, height: baseHeight } = resolutionMap[options.resolution];
-    const [ratioW, ratioH] = aspectRatioMap[options.aspectRatio];
-    const aspectRatio = ratioW / ratioH;
-    const baseAspect = baseWidth / baseHeight;
-    
-    let width = baseWidth;
-    let height = baseHeight;
-    
-    if (aspectRatio > baseAspect) {
-      width = Math.round(baseHeight * aspectRatio);
-      width = width % 2 === 0 ? width : width + 1;
-    } else if (aspectRatio < baseAspect) {
-      height = Math.round(baseWidth / aspectRatio);
-      height = height % 2 === 0 ? height : height + 1;
-    }
+    const { width, height } = resolutionMap[options.resolution][options.aspectRatio];
 
     const ext = options.format;
     const outputFilename = `timelapse_${jobId}.${ext}`;
