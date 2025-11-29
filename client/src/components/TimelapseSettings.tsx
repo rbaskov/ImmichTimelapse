@@ -2,9 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Input } from '@/components/ui/input';
 import { Settings2, Clock, Film, Monitor, Zap, Maximize2, Layers } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import { useLanguage } from '@/lib/language-context';
+import { useState } from 'react';
 
 interface TimelapseSettingsProps {
   selectedCount?: number;
@@ -36,12 +38,17 @@ const resolutionsByAspectRatio = {
 export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseSettingsProps) {
   const { timelapseSettings, setTimelapseSettings } = useImmich();
   const { t } = useLanguage();
+  const [desiredDuration, setDesiredDuration] = useState<string>('');
 
   const fpsOptions = [10, 15, 24, 30, 60] as const;
   const availableResolutions = resolutionsByAspectRatio[timelapseSettings.aspectRatio];
   
   const estimatedDuration = selectedCount > 0 
     ? (selectedCount / timelapseSettings.fps).toFixed(1) 
+    : '0';
+
+  const requiredFps = desiredDuration && selectedCount > 0
+    ? (selectedCount / parseFloat(desiredDuration)).toFixed(1)
     : '0';
 
   return (
@@ -245,21 +252,50 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
           </ToggleGroup>
         </div>
 
-        <div className="pt-2 border-t">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-muted-foreground">
+        <div className="pt-4 border-t space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm flex items-center gap-2">
               <Clock className="h-3 w-3" />
-              Duration
-            </span>
-            <span className="font-mono font-medium" data-testid="text-duration-estimate">
-              {estimatedDuration}s
-            </span>
+              Current Duration
+            </Label>
+            <div className="flex items-center justify-between bg-muted/50 rounded-md p-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedCount} frames at {timelapseSettings.fps} fps
+              </span>
+              <span className="font-mono font-semibold" data-testid="text-duration-estimate">
+                {estimatedDuration}s
+              </span>
+            </div>
           </div>
-          {selectedCount > 0 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {selectedCount} frames at {timelapseSettings.fps} fps
-            </p>
-          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="duration-input" className="text-sm flex items-center gap-2">
+              <Clock className="h-3 w-3" />
+              Duration Calculator
+            </Label>
+            <div className="space-y-2">
+              <Input
+                id="duration-input"
+                type="number"
+                placeholder="Desired duration (seconds)"
+                value={desiredDuration}
+                onChange={(e) => setDesiredDuration(e.target.value)}
+                min="0.1"
+                step="0.1"
+                data-testid="input-desired-duration"
+              />
+              {desiredDuration && selectedCount > 0 && (
+                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-950/30 rounded-md p-2">
+                  <span className="text-xs text-muted-foreground">
+                    Required FPS
+                  </span>
+                  <span className="font-mono font-semibold text-blue-600 dark:text-blue-400" data-testid="text-required-fps">
+                    {requiredFps} fps
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
