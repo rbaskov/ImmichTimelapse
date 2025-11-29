@@ -43,18 +43,21 @@ export class ImmichClient {
   constructor(serverUrl: string, apiKey: string) {
     this.serverUrl = serverUrl.replace(/\/$/, '');
     this.client = axios.create({
-      baseURL: `${this.serverUrl}/api`,
+      baseURL: this.serverUrl,
       headers: {
         'x-api-key': apiKey,
         'Accept': 'application/json',
       },
       timeout: 30000,
+      httpsAgent: {
+        rejectUnauthorized: false,
+      } as any,
     });
   }
 
   async validateConnection(): Promise<boolean> {
     try {
-      const response = await this.client.get('/server-info/ping');
+      const response = await this.client.get('/api/server-info/ping');
       return response.data?.res === 'pong';
     } catch (error) {
       console.error('Failed to validate Immich connection:', error);
@@ -64,7 +67,7 @@ export class ImmichClient {
 
   async getServerInfo(): Promise<{ version: string } | null> {
     try {
-      const response = await this.client.get('/server-info/version');
+      const response = await this.client.get('/api/server-info/version');
       return response.data;
     } catch (error) {
       console.error('Failed to get server info:', error);
@@ -73,7 +76,7 @@ export class ImmichClient {
   }
 
   async getAlbums(): Promise<ImmichAlbum[]> {
-    const response = await this.client.get('/albums');
+    const response = await this.client.get('/api/albums');
     return response.data.map((album: any) => ({
       id: album.id,
       albumName: album.albumName,
@@ -83,7 +86,7 @@ export class ImmichClient {
   }
 
   async getAlbumAssets(albumId: string): Promise<ImmichAsset[]> {
-    const response = await this.client.get(`/albums/${albumId}`);
+    const response = await this.client.get(`/api/albums/${albumId}`);
     return (response.data.assets || [])
       .filter((asset: any) => asset.type === 'IMAGE')
       .map(this.mapAsset);
@@ -103,13 +106,13 @@ export class ImmichClient {
       searchParams.takenBefore = params.takenBefore;
     }
 
-    const response = await this.client.post('/search/metadata', searchParams);
+    const response = await this.client.post('/api/search/metadata', searchParams);
     const assets = response.data.assets?.items || response.data.assets || [];
     return assets.map(this.mapAsset);
   }
 
   async getAllAssets(limit: number = 500): Promise<ImmichAsset[]> {
-    const response = await this.client.get('/assets', {
+    const response = await this.client.get('/api/assets', {
       params: { take: limit },
     });
     return response.data
@@ -119,7 +122,7 @@ export class ImmichClient {
 
   async getAssetThumbnail(assetId: string): Promise<Buffer | null> {
     try {
-      const response = await this.client.get(`/assets/${assetId}/thumbnail`, {
+      const response = await this.client.get(`/api/assets/${assetId}/thumbnail`, {
         responseType: 'arraybuffer',
         params: { size: 'preview' },
       });
@@ -132,7 +135,7 @@ export class ImmichClient {
 
   async getAssetOriginal(assetId: string): Promise<Buffer | null> {
     try {
-      const response = await this.client.get(`/assets/${assetId}/original`, {
+      const response = await this.client.get(`/api/assets/${assetId}/original`, {
         responseType: 'arraybuffer',
       });
       return Buffer.from(response.data);
