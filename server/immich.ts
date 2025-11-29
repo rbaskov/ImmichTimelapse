@@ -97,15 +97,15 @@ export class ImmichClient {
   async searchAssets(params: ImmichSearchParams): Promise<ImmichAsset[]> {
     const pageSize = 250; // Immich API limit per request
     let allAssets: any[] = [];
-    let skip = 0;
+    let page = 1;
     const limit = params.size || 10000;
 
-    // Paginate through search results since API limits to 250 per request
-    while (skip < limit) {
+    // Paginate through search results using official Immich API pagination (page/size)
+    while (allAssets.length < limit) {
       const searchParams: any = {
         type: params.type || 'IMAGE',
-        take: Math.min(pageSize, limit - skip),
-        skip: skip,
+        page: page,
+        size: Math.min(pageSize, limit - allAssets.length),
       };
 
       if (params.takenAfter) {
@@ -116,16 +116,16 @@ export class ImmichClient {
       }
 
       const response = await this.client.post('/api/search/metadata', searchParams);
-      let assets = Array.isArray(response.data) ? response.data : 
-                   (response.data.assets?.items || response.data.assets || []);
+      let assets = response.data?.assets?.items || [];
       
       if (!assets || assets.length === 0) break;
       
       allAssets = allAssets.concat(assets);
-      skip += assets.length;
       
-      // If we got fewer results than requested, we've reached the end
-      if (assets.length < pageSize) break;
+      // If we got fewer results than requested or no nextPage, we've reached the end
+      if (!response.data?.assets?.nextPage) break;
+      
+      page = response.data.assets.nextPage;
     }
 
     allAssets = allAssets.filter((asset: any) => asset.type === 'IMAGE');
@@ -158,24 +158,25 @@ export class ImmichClient {
   async getAllAssets(limit: number = 10000): Promise<ImmichAsset[]> {
     const pageSize = 250; // Immich API limit per request
     let allAssets: any[] = [];
-    let skip = 0;
+    let page = 1;
 
-    // Paginate through results since API limits to 250 per request
-    while (skip < limit) {
+    // Paginate through results using official Immich API pagination (page/size)
+    while (allAssets.length < limit) {
       const response = await this.client.get('/api/assets', {
         params: { 
-          take: Math.min(pageSize, limit - skip),
-          skip: skip
+          page: page,
+          size: Math.min(pageSize, limit - allAssets.length)
         },
       });
 
       if (!response.data || response.data.length === 0) break;
       
       allAssets = allAssets.concat(response.data);
-      skip += response.data.length;
       
       // If we got fewer results than requested, we've reached the end
       if (response.data.length < pageSize) break;
+      
+      page++;
     }
 
     return allAssets
