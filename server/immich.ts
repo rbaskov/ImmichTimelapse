@@ -107,31 +107,15 @@ export class ImmichClient {
     if (params.takenBefore) {
       searchParams.endDate = params.takenBefore;
     }
+    if (params.filename) {
+      searchParams.filename = params.filename;
+    }
 
     const response = await this.client.post('/api/search/metadata', searchParams);
-    let assets = response.data.assets?.items || response.data.assets || [];
+    let assets = Array.isArray(response.data) ? response.data : 
+                 (response.data.assets?.items || response.data.assets || []);
     
-    // Filter by filename if provided (supports wildcards: prefix*, *suffix, *contains*)
-    if (params.filename) {
-      const pattern = params.filename.toLowerCase();
-      assets = assets.filter((asset: any) => {
-        const fileName = asset.originalFileName?.toLowerCase() || '';
-        
-        if (pattern.startsWith('*') && pattern.endsWith('*')) {
-          // *contains* pattern
-          return fileName.includes(pattern.slice(1, -1));
-        } else if (pattern.startsWith('*')) {
-          // *suffix pattern
-          return fileName.endsWith(pattern.slice(1));
-        } else if (pattern.endsWith('*')) {
-          // prefix* pattern
-          return fileName.startsWith(pattern.slice(0, -1));
-        } else {
-          // exact substring match
-          return fileName.includes(pattern);
-        }
-      });
-    }
+    assets = assets.filter((asset: any) => asset.type === 'IMAGE');
     
     return assets.map(this.mapAsset);
   }
