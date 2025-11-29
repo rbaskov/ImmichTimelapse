@@ -138,8 +138,8 @@ export async function registerRoutes(
       
       if (albumId) {
         assets = await client.getAlbumAssets(albumId as string);
-      } else if (dateFrom || dateTo || filename) {
-        // Use search API for date/filename filters
+      } else if (dateFrom || dateTo) {
+        // Use search API for date filters only
         const searchParams: ImmichSearchParams = {
           type: "IMAGE",
           size: Number(limit) || 10000,
@@ -148,6 +148,23 @@ export async function registerRoutes(
         if (dateTo) searchParams.takenBefore = dateTo as string;
         if (filename) searchParams.filename = filename as string;
         assets = await client.searchAssets(searchParams);
+      } else if (filename) {
+        // For filename-only filters, get all assets and filter on server
+        assets = await client.getAllAssets(Number(limit) || 10000);
+        const pattern = (filename as string).toLowerCase();
+        assets = assets.filter((asset: any) => {
+          const fileName = asset.originalFileName?.toLowerCase() || '';
+          
+          if (pattern.startsWith('*') && pattern.endsWith('*')) {
+            return fileName.includes(pattern.slice(1, -1));
+          } else if (pattern.startsWith('*')) {
+            return fileName.endsWith(pattern.slice(1));
+          } else if (pattern.endsWith('*')) {
+            return fileName.startsWith(pattern.slice(0, -1));
+          } else {
+            return fileName.includes(pattern);
+          }
+        });
       } else {
         assets = await client.getAllAssets(Number(limit) || 10000);
       }
