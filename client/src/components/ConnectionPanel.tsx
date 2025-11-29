@@ -9,6 +9,7 @@ import { Server, Key, ChevronDown, ChevronUp, Loader2, CheckCircle2, XCircle, Tr
 import { useImmich } from '@/lib/immich-context';
 import { useLanguage } from '@/lib/language-context';
 import { useToast } from '@/hooks/use-toast';
+import { encryptProfile, decryptProfile } from '@/lib/encryption';
 import type { ServerProfile } from '@/lib/types';
 
 interface ConnectionPanelProps {
@@ -31,13 +32,21 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
   useEffect(() => {
     const saved = localStorage.getItem('immich_profiles');
     if (saved) {
-      setProfiles(JSON.parse(saved));
+      try {
+        const decrypted = decryptProfile(saved);
+        if (decrypted && Array.isArray(decrypted.profiles)) {
+          setProfiles(decrypted.profiles);
+        }
+      } catch (error) {
+        console.error('Failed to load profiles:', error);
+      }
     }
   }, []);
 
   const saveProfiles = (newProfiles: ServerProfile[]) => {
     setProfiles(newProfiles);
-    localStorage.setItem('immich_profiles', JSON.stringify(newProfiles));
+    const encrypted = encryptProfile({ profiles: newProfiles });
+    localStorage.setItem('immich_profiles', encrypted);
   };
 
   const handleSaveProfile = () => {
@@ -195,7 +204,7 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
                     data-testid="button-delete-profile"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    {t('connection.saveProfile')}
+                    Delete Profile
                   </Button>
                 )}
               </div>

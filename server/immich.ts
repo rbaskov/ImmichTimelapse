@@ -97,7 +97,7 @@ export class ImmichClient {
   async searchAssets(params: ImmichSearchParams): Promise<ImmichAsset[]> {
     const searchParams: any = {
       type: params.type || 'IMAGE',
-      size: params.size || 1000,
+      size: params.size || 10000,
       page: params.page || 1,
     };
 
@@ -136,7 +136,7 @@ export class ImmichClient {
     return assets.map(this.mapAsset);
   }
 
-  async getAllAssets(limit: number = 500): Promise<ImmichAsset[]> {
+  async getAllAssets(limit: number = 10000): Promise<ImmichAsset[]> {
     const response = await this.client.get('/api/assets', {
       params: { take: limit },
     });

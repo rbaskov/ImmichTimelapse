@@ -142,14 +142,14 @@ export async function registerRoutes(
         // Use search API for date/filename filters
         const searchParams: ImmichSearchParams = {
           type: "IMAGE",
-          size: Number(limit) || 1000,
+          size: Number(limit) || 10000,
         };
         if (dateFrom) searchParams.takenAfter = dateFrom as string;
         if (dateTo) searchParams.takenBefore = dateTo as string;
         if (filename) searchParams.filename = filename as string;
         assets = await client.searchAssets(searchParams);
       } else {
-        assets = await client.getAllAssets(Number(limit) || 500);
+        assets = await client.getAllAssets(Number(limit) || 10000);
       }
 
       assets.sort((a, b) => 
