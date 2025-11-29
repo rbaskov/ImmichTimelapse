@@ -97,15 +97,15 @@ export class ImmichClient {
   async searchAssets(params: ImmichSearchParams): Promise<ImmichAsset[]> {
     const searchParams: any = {
       type: params.type || 'IMAGE',
-      size: params.size || 10000,
-      page: params.page || 1,
+      take: params.size || 10000,
+      skip: 0,
     };
 
     if (params.takenAfter) {
-      searchParams.takenAfter = params.takenAfter;
+      searchParams.startDate = params.takenAfter;
     }
     if (params.takenBefore) {
-      searchParams.takenBefore = params.takenBefore;
+      searchParams.endDate = params.takenBefore;
     }
 
     const response = await this.client.post('/api/search/metadata', searchParams);
