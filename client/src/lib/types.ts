@@ -57,3 +57,11 @@ export interface TimelapseJob {
   outputUrl?: string;
   error?: string;
 }
+
+export interface ServerProfile {
+  id: string;
+  name: string;
+  serverUrl: string;
+  apiKey: string;
+  createdAt: string;
+}

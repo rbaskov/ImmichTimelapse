@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Server, Key, ChevronDown, ChevronUp, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Server, Key, ChevronDown, ChevronUp, Loader2, CheckCircle2, XCircle, Trash2, Save } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import { useToast } from '@/hooks/use-toast';
+import type { ServerProfile } from '@/lib/types';
 
 interface ConnectionPanelProps {
   onConnect?: (serverUrl: string, apiKey: string) => Promise<boolean>;
@@ -19,6 +21,70 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
   const [apiKey, setApiKey] = useState(connection.apiKey);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isOpen, setIsOpen] = useState(!connection.isConnected);
+  const [profiles, setProfiles] = useState<ServerProfile[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState('');
+  const [profileName, setProfileName] = useState('');
+  const [showSaveProfile, setShowSaveProfile] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('immich_profiles');
+    if (saved) {
+      setProfiles(JSON.parse(saved));
+    }
+  }, []);
+
+  const saveProfiles = (newProfiles: ServerProfile[]) => {
+    setProfiles(newProfiles);
+    localStorage.setItem('immich_profiles', JSON.stringify(newProfiles));
+  };
+
+  const handleSaveProfile = () => {
+    if (!profileName.trim()) {
+      toast({
+        title: 'Profile name required',
+        description: 'Please enter a name for this profile',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newProfile: ServerProfile = {
+      id: Date.now().toString(),
+      name: profileName,
+      serverUrl,
+      apiKey,
+      createdAt: new Date().toISOString(),
+    };
+
+    saveProfiles([...profiles, newProfile]);
+    setProfileName('');
+    setShowSaveProfile(false);
+    toast({
+      title: 'Profile saved',
+      description: `Profile "${profileName}" has been saved`,
+    });
+  };
+
+  const handleLoadProfile = (profileId: string) => {
+    const profile = profiles.find(p => p.id === profileId);
+    if (profile) {
+      setServerUrl(profile.serverUrl);
+      setApiKey(profile.apiKey);
+      setSelectedProfileId(profileId);
+    }
+  };
+
+  const handleDeleteProfile = (profileId: string) => {
+    const profile = profiles.find(p => p.id === profileId);
+    saveProfiles(profiles.filter(p => p.id !== profileId));
+    if (selectedProfileId === profileId) {
+      setSelectedProfileId('');
+    }
+    toast({
+      title: 'Profile deleted',
+      description: `Profile "${profile?.name}" has been removed`,
+    });
+  };
 
   const handleConnect = async () => {
     if (!serverUrl || !apiKey) {
@@ -103,6 +169,35 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="p-4 pt-0 space-y-4">
+            {profiles.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm">Saved Profiles</Label>
+                <Select value={selectedProfileId} onValueChange={handleLoadProfile}>
+                  <SelectTrigger data-testid="select-profile" className="w-full">
+                    <SelectValue placeholder="Select a saved profile" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {profiles.map((profile) => (
+                      <SelectItem key={profile.id} value={profile.id}>
+                        {profile.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedProfileId && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleDeleteProfile(selectedProfileId)}
+                    data-testid="button-delete-profile"
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Delete Profile
+                  </Button>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="server-url" className="text-sm">
                 Server URL
@@ -140,30 +235,76 @@ export default function ConnectionPanel({ onConnect }: ConnectionPanelProps) {
               </div>
             </div>
             {connection.isConnected ? (
-              <Button
-                data-testid="button-disconnect"
-                variant="outline"
-                className="w-full"
-                onClick={handleDisconnect}
-              >
-                Disconnect
-              </Button>
+              <>
+                <Button
+                  data-testid="button-disconnect"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleDisconnect}
+                >
+                  Disconnect
+                </Button>
+                <Button
+                  data-testid="button-save-profile"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setShowSaveProfile(!showSaveProfile)}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Profile
+                </Button>
+              </>
             ) : (
-              <Button
-                data-testid="button-connect"
-                className="w-full"
-                onClick={handleConnect}
-                disabled={isConnecting}
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  'Connect'
+              <>
+                <Button
+                  data-testid="button-connect"
+                  className="w-full"
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    'Connect'
+                  )}
+                </Button>
+                {showSaveProfile && (
+                  <div className="space-y-2 border-t pt-4">
+                    <Label htmlFor="profile-name" className="text-sm">
+                      Profile Name
+                    </Label>
+                    <Input
+                      id="profile-name"
+                      data-testid="input-profile-name"
+                      placeholder="My Server"
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      className="text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        data-testid="button-save-new-profile"
+                        size="sm"
+                        className="flex-1"
+                        onClick={handleSaveProfile}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setShowSaveProfile(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
                 )}
-              </Button>
+              </>
             )}
           </CardContent>
         </CollapsibleContent>

@@ -125,10 +125,10 @@ export function createWebSocketConnection(
 
   try {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const hostname = window.location.hostname || 'localhost';
-    const port = window.location.port ? ':' + window.location.port : '';
-    const wsUrl = `${protocol}//${hostname}${port}/ws?sessionId=${sid}`;
+    const host = window.location.host || 'localhost:5000';
+    const wsUrl = `${protocol}//${host}/ws?sessionId=${sid}`;
     
+    console.debug('[WebSocket] Connecting to:', wsUrl);
     const ws = new WebSocket(wsUrl);
 
     ws.onmessage = (event) => {
