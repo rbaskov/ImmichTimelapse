@@ -104,10 +104,10 @@ export default function Home() {
     
     try {
       const fetchedAssets = await api.getAssets({
-        albumId: filter.albumId,
-        dateFrom: filter.dateFrom,
-        dateTo: filter.dateTo,
-        filename: filter.filename,
+        albumId: filter.albumId || undefined,
+        dateFrom: filter.dateFrom || undefined,
+        dateTo: filter.dateTo || undefined,
+        filename: filter.filename || undefined,
         limit: 10000,
       });
       
@@ -128,13 +128,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [connection.isConnected, filter, setAssets, setIsLoading, deselectAllAssets, toast]);
-
-  useEffect(() => {
-    if (connection.isConnected && assets.length === 0) {
-      handleApplyFilters();
-    }
-  }, [connection.isConnected]);
+  }, [connection.isConnected, filter, setAssets, setIsLoading, deselectAllAssets, toast, t]);
 
   const handleGenerateTimelapse = useCallback(async () => {
     const selectedCount = selectedAssets.size;
