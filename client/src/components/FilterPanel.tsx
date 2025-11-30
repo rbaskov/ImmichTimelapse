@@ -25,10 +25,20 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
   const [filterNameInput, setFilterNameInput] = useState('');
-  const [showSaveInput, setShowSaveInput] = useState(false);
+  const [selectedFilterId, setSelectedFilterId] = useState<string | null>(null);
 
   const clearFilters = () => {
     setFilter({});
+    setSelectedFilterId(null);
+  };
+
+  const handleLoadFilter = (filterId: string) => {
+    loadFilter(filterId);
+    setSelectedFilterId(filterId);
+    toast({
+      title: 'Filter loaded',
+      description: 'Filter applied to current search',
+    });
   };
 
   const hasActiveFilters = filter.dateFrom || filter.dateTo || filter.albumId || filter.filename;
@@ -175,7 +185,6 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
                 if (e.key === 'Enter' && filterNameInput.trim()) {
                   saveFilter(filterNameInput.trim());
                   setFilterNameInput('');
-                  setShowSaveInput(false);
                   toast({
                     title: 'Filter saved',
                     description: `Filter "${filterNameInput}" has been saved`,
@@ -190,7 +199,6 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
                 if (filterNameInput.trim()) {
                   saveFilter(filterNameInput.trim());
                   setFilterNameInput('');
-                  setShowSaveInput(false);
                   toast({
                     title: 'Filter saved',
                     description: `Filter "${filterNameInput}" has been saved`,
@@ -209,13 +217,7 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
           {savedFilters.length > 0 && (
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Saved Filters</Label>
-              <Select onValueChange={(value) => {
-                loadFilter(value);
-                toast({
-                  title: 'Filter loaded',
-                  description: 'Filter applied to current search',
-                });
-              }}>
+              <Select value={selectedFilterId || ''} onValueChange={handleLoadFilter}>
                 <SelectTrigger className="text-sm" data-testid="select-saved-filter">
                   <SelectValue placeholder="Load a saved filter" />
                 </SelectTrigger>
