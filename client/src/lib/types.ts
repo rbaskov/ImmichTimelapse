@@ -39,6 +39,13 @@ export interface PhotoFilter {
   filename?: string;
 }
 
+export interface SavedFilter {
+  id: string;
+  name: string;
+  filter: PhotoFilter;
+  createdAt: string;
+}
+
 export interface TimelapseSettings {
   fps: 10 | 15 | 24 | 30 | 60;
   resolution: '720p' | '1080p' | '4K';

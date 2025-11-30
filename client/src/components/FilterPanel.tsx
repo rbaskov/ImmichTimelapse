@@ -6,9 +6,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Filter, CalendarIcon, FolderOpen, X, Search } from 'lucide-react';
+import { Filter, CalendarIcon, FolderOpen, X, Search, Save, Trash2 } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import { useLanguage } from '@/lib/language-context';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useState } from 'react';
 
@@ -18,10 +19,13 @@ interface FilterPanelProps {
 }
 
 export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPanelProps) {
-  const { filter, setFilter, albums, connection } = useImmich();
+  const { filter, setFilter, albums, connection, savedFilters, saveFilter, loadFilter, deleteSavedFilter } = useImmich();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [dateFromOpen, setDateFromOpen] = useState(false);
   const [dateToOpen, setDateToOpen] = useState(false);
+  const [filterNameInput, setFilterNameInput] = useState('');
+  const [showSaveInput, setShowSaveInput] = useState(false);
 
   const clearFilters = () => {
     setFilter({});
@@ -160,6 +164,97 @@ export default function FilterPanel({ onApplyFilters, photoCount = 0 }: FilterPa
             </Badge>
           )}
         </Button>
+
+        <div className="pt-4 border-t space-y-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Filter name"
+              value={filterNameInput}
+              onChange={(e) => setFilterNameInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && filterNameInput.trim()) {
+                  saveFilter(filterNameInput.trim());
+                  setFilterNameInput('');
+                  setShowSaveInput(false);
+                  toast({
+                    title: 'Filter saved',
+                    description: `Filter "${filterNameInput}" has been saved`,
+                  });
+                }
+              }}
+              className="flex-1 text-sm"
+              data-testid="input-filter-name"
+            />
+            <Button
+              onClick={() => {
+                if (filterNameInput.trim()) {
+                  saveFilter(filterNameInput.trim());
+                  setFilterNameInput('');
+                  setShowSaveInput(false);
+                  toast({
+                    title: 'Filter saved',
+                    description: `Filter "${filterNameInput}" has been saved`,
+                  });
+                }
+              }}
+              size="sm"
+              variant="default"
+              disabled={!filterNameInput.trim()}
+              data-testid="button-save-filter"
+            >
+              <Save className="h-3 w-3" />
+            </Button>
+          </div>
+
+          {savedFilters.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Saved Filters</Label>
+              <Select onValueChange={(value) => {
+                loadFilter(value);
+                toast({
+                  title: 'Filter loaded',
+                  description: 'Filter applied to current search',
+                });
+              }}>
+                <SelectTrigger className="text-sm" data-testid="select-saved-filter">
+                  <SelectValue placeholder="Load a saved filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {savedFilters.map((sf) => (
+                    <SelectItem key={sf.id} value={sf.id}>
+                      {sf.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {savedFilters.length > 0 && (
+                <div className="space-y-1">
+                  {savedFilters.map((sf) => (
+                    <div key={sf.id} className="flex items-center justify-between bg-muted/50 rounded p-1.5 text-xs">
+                      <span className="text-muted-foreground">{sf.name}</span>
+                      <Button
+                        onClick={() => {
+                          deleteSavedFilter(sf.id);
+                          toast({
+                            title: 'Filter deleted',
+                            description: `Filter "${sf.name}" has been removed`,
+                          });
+                        }}
+                        size="sm"
+                        variant="ghost"
+                        className="h-5 px-1"
+                        data-testid={`button-delete-filter-${sf.id}`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
