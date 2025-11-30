@@ -47,6 +47,7 @@ export interface TimelapseSettings {
   codec: 'h264' | 'h265' | 'vp8' | 'vp9';
   aspectRatio: '16:9' | '9:16' | '4:3' | '1:1';
   interpolation: 'none' | 'linear';
+  customFps?: number;
 }
 
 export interface TimelapseJob {

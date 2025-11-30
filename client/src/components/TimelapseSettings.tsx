@@ -44,8 +44,10 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
   const fpsOptions = [10, 15, 24, 30, 60] as const;
   const availableResolutions = resolutionsByAspectRatio[timelapseSettings.aspectRatio];
   
+  const activeFps = timelapseSettings.customFps || timelapseSettings.fps;
+  
   const estimatedDuration = selectedCount > 0 
-    ? (selectedCount / timelapseSettings.fps).toFixed(1) 
+    ? (selectedCount / activeFps).toFixed(1) 
     : '0';
 
   const requiredFps = desiredDuration && selectedCount > 0
@@ -261,7 +263,7 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
             </Label>
             <div className="flex items-center justify-between bg-muted/50 rounded-md p-2">
               <span className="text-xs text-muted-foreground">
-                {selectedCount} frames at {timelapseSettings.fps} fps
+                {selectedCount} frames at {activeFps} fps {timelapseSettings.customFps ? '(custom)' : ''}
               </span>
               <span className="font-mono font-semibold" data-testid="text-duration-estimate">
                 {estimatedDuration}s
@@ -295,26 +297,39 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
                       {requiredFps} fps
                     </span>
                   </div>
-                  <Button
-                    onClick={() => {
-                      const fps = Math.round(parseFloat(requiredFps));
-                      const validFps = [10, 15, 24, 30, 60] as const;
-                      const closestFps = validFps.reduce((prev, curr) => 
-                        Math.abs(curr - fps) < Math.abs(prev - fps) ? curr : prev
-                      );
-                      setTimelapseSettings({
-                        ...timelapseSettings,
-                        fps: closestFps,
-                      });
-                      setDesiredDuration('');
-                    }}
-                    size="sm"
-                    variant="default"
-                    className="w-full"
-                    data-testid="button-apply-duration"
-                  >
-                    Apply Duration
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        const fps = parseFloat(requiredFps);
+                        setTimelapseSettings({
+                          ...timelapseSettings,
+                          customFps: Math.round(fps * 10) / 10,
+                        });
+                        setDesiredDuration('');
+                      }}
+                      size="sm"
+                      variant="default"
+                      className="flex-1"
+                      data-testid="button-apply-duration"
+                    >
+                      Apply Duration
+                    </Button>
+                    {timelapseSettings.customFps && (
+                      <Button
+                        onClick={() => {
+                          setTimelapseSettings({
+                            ...timelapseSettings,
+                            customFps: undefined,
+                          });
+                        }}
+                        size="sm"
+                        variant="outline"
+                        data-testid="button-clear-custom-fps"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
                 </>
               )}
             </div>

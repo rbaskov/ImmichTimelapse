@@ -147,7 +147,11 @@ export default function Home() {
         .sort((a, b) => new Date(a.fileCreatedAt).getTime() - new Date(b.fileCreatedAt).getTime())
         .map(a => a.id);
 
-      const jobId = await api.createTimelapse(sortedAssetIds, timelapseSettings);
+      const settingsToUse = timelapseSettings.customFps 
+        ? { ...timelapseSettings, fps: timelapseSettings.customFps as any }
+        : timelapseSettings;
+
+      const jobId = await api.createTimelapse(sortedAssetIds, settingsToUse);
       
       setCurrentJob({
         id: jobId,
