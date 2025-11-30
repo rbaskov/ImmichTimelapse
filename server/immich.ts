@@ -109,10 +109,10 @@ export class ImmichClient {
       };
 
       if (params.takenAfter) {
-        searchParams.startDate = params.takenAfter;
+        searchParams.takenAfter = params.takenAfter;
       }
       if (params.takenBefore) {
-        searchParams.endDate = params.takenBefore;
+        searchParams.takenBefore = params.takenBefore;
       }
 
       const response = await this.client.post('/api/search/metadata', searchParams);
