@@ -130,6 +130,20 @@ export default function Home() {
     }
   }, [connection.isConnected, filter, setAssets, setIsLoading, deselectAllAssets, toast, t]);
 
+  // Auto-apply filters when filter values change
+  useEffect(() => {
+    if (!connection.isConnected) {
+      setPhotoCount(0);
+      return;
+    }
+
+    const debounceTimer = setTimeout(() => {
+      handleApplyFilters();
+    }, 500); // 500ms debounce to avoid too many requests
+
+    return () => clearTimeout(debounceTimer);
+  }, [filter, connection.isConnected, handleApplyFilters]);
+
   const handleGenerateTimelapse = useCallback(async () => {
     const selectedCount = selectedAssets.size;
     if (selectedCount === 0) {
