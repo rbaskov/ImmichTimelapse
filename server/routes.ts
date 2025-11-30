@@ -4,8 +4,11 @@ import { WebSocketServer, WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { promises as fs } from "fs";
+import { createHash } from "crypto";
 import { createClient, getClient, removeClient, type ImmichSearchParams } from "./immich";
 import { createTimelapse, getJob, deleteJob, type TimelapseOptions, type TimelapseJob } from "./timelapse";
+import db from "./db";
+import { serverProfiles } from "@shared/schema";
 
 interface SessionData {
   serverUrl: string;
