@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Settings2, Clock, Film, Monitor, Zap, Maximize2, Layers } from 'lucide-react';
 import { useImmich } from '@/lib/immich-context';
 import { useLanguage } from '@/lib/language-context';
@@ -285,14 +286,36 @@ export default function TimelapseSettingsPanel({ selectedCount = 0 }: TimelapseS
                 data-testid="input-desired-duration"
               />
               {desiredDuration && selectedCount > 0 && (
-                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-950/30 rounded-md p-2">
-                  <span className="text-xs text-muted-foreground">
-                    Required FPS
-                  </span>
-                  <span className="font-mono font-semibold text-blue-600 dark:text-blue-400" data-testid="text-required-fps">
-                    {requiredFps} fps
-                  </span>
-                </div>
+                <>
+                  <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-950/30 rounded-md p-2">
+                    <span className="text-xs text-muted-foreground">
+                      Required FPS
+                    </span>
+                    <span className="font-mono font-semibold text-blue-600 dark:text-blue-400" data-testid="text-required-fps">
+                      {requiredFps} fps
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      const fps = Math.round(parseFloat(requiredFps));
+                      const validFps = [10, 15, 24, 30, 60] as const;
+                      const closestFps = validFps.reduce((prev, curr) => 
+                        Math.abs(curr - fps) < Math.abs(prev - fps) ? curr : prev
+                      );
+                      setTimelapseSettings({
+                        ...timelapseSettings,
+                        fps: closestFps,
+                      });
+                      setDesiredDuration('');
+                    }}
+                    size="sm"
+                    variant="default"
+                    className="w-full"
+                    data-testid="button-apply-duration"
+                  >
+                    Apply Duration
+                  </Button>
+                </>
               )}
             </div>
           </div>
